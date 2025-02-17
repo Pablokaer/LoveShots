@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:vibration/vibration.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,11 +37,12 @@ class _MyHomePageState extends State<MyHomePage> {
   String _randomPhrase = 'Carregando...';
   List<String> _phrases = [];
   Timer? _timer;
-  Timer? _countdownTimer; // Timer para a contagem regressiva
+  Timer? _countdownTimer;
   final int _intervalSeconds = 5;
   double _percentageDiscovered = 0.0;
   List<String> _discoveredPhrases = [];
   int _countdown = 0;
+  bool _isAppBarVisible = true;
 
   @override
   void initState() {
@@ -53,7 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     _timer?.cancel();
-    _countdownTimer?.cancel(); // Cancela o timer da contagem regressiva
+    _countdownTimer?.cancel();
     super.dispose();
   }
 
@@ -82,10 +84,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _percentageDiscovered = (_discoveredPhrases.length / _phrases.length) * 100;
     _countdown = _intervalSeconds;
+
     if (_percentageDiscovered == 100) {
       _timer?.cancel();
-      _countdownTimer?.cancel(); // Cancela o timer da contagem regressiva
+      _countdownTimer?.cancel();
     }
+
+    // Vibração ao receber uma nova frase
+    Vibration.hasVibrator().then((hasVibrator) {
+      if (hasVibrator == true) {
+        Vibration.vibrate(duration: 200);
+      }
+    });
+
     setState(() {
       _randomPhrase = newPhrase;
     });
@@ -138,40 +149,63 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void _toggleAppBarVisibility() {
+    setState(() {
+      _isAppBarVisible = !_isAppBarVisible;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              _randomPhrase,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 18),
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBody: true,
+        appBar: _isAppBarVisible
+            ? AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: Text(widget.title),
+        )
+            : null,
+        body: GestureDetector(
+          onTap: _toggleAppBarVisibility,
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.white,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  _randomPhrase,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 18),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Frases Descobertas: ${_percentageDiscovered.toStringAsFixed(1)}%',
+                  style: const TextStyle(fontSize: 16),
+                ),
+                if (_percentageDiscovered < 100)
+                  Column(
+                    children: [
+                      const SizedBox(height: 10),
+                      Text(
+                        'Próximo Sorteio em: $_countdown',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    _showDiscoveredPhrasesDialog(context);
+                  },
+                  child: const Text('Ver Frases Descobertas'),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            Text(
-              'Frases Descobertas: ${_percentageDiscovered.toStringAsFixed(1)}%',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Próximo Sorteio em: $_countdown',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                _showDiscoveredPhrasesDialog(context);
-              },
-              child: const Text('Ver Frases Descobertas'),
-            ),
-          ],
+          ),
         ),
       ),
     );
