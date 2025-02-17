@@ -33,7 +33,7 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   String _randomPhrase = 'Carregando...';
   List<String> _phrases = [];
   Timer? _timer;
@@ -47,6 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this); // Adiciona o observador
     _loadPhrases();
     _startTimer();
     _startCountdown();
@@ -56,7 +57,24 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     _timer?.cancel();
     _countdownTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this); // Remove o observador
     super.dispose();
+  }
+
+  // Método para lidar com mudanças no ciclo de vida do app
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      // Quando o app é trazido de volta para o primeiro plano
+      _startTimer();
+      _startCountdown();
+    } else if (state == AppLifecycleState.paused) {
+      // Quando o app vai para o segundo plano
+      _timer?.cancel();
+      _countdownTimer?.cancel();
+    }
   }
 
   Future<void> _loadPhrases() async {
