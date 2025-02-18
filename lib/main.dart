@@ -38,16 +38,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   List<String> _phrases = [];
   Timer? _timer;
   Timer? _countdownTimer;
-  final int _intervalSeconds = 5;
+  final int _intervalSeconds = 2;
   double _percentageDiscovered = 0.0;
   List<String> _discoveredPhrases = [];
   int _countdown = 0;
-  bool _isAppBarVisible = true;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this); // Adiciona o observador
+    WidgetsBinding.instance.addObserver(this);
     _loadPhrases();
     _startTimer();
     _startCountdown();
@@ -57,24 +56,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   void dispose() {
     _timer?.cancel();
     _countdownTimer?.cancel();
-    WidgetsBinding.instance.removeObserver(this); // Remove o observador
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
-  }
-
-  // Método para lidar com mudanças no ciclo de vida do app
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-
-    if (state == AppLifecycleState.resumed) {
-      // Quando o app é trazido de volta para o primeiro plano
-      _startTimer();
-      _startCountdown();
-    } else if (state == AppLifecycleState.paused) {
-      // Quando o app vai para o segundo plano
-      _timer?.cancel();
-      _countdownTimer?.cancel();
-    }
   }
 
   Future<void> _loadPhrases() async {
@@ -108,7 +91,6 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       _countdownTimer?.cancel();
     }
 
-    // Vibração ao receber uma nova frase
     Vibration.hasVibrator().then((hasVibrator) {
       if (hasVibrator == true) {
         Vibration.vibrate(duration: 200);
@@ -167,63 +149,102 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     );
   }
 
-  void _toggleAppBarVisibility() {
-    setState(() {
-      _isAppBarVisible = !_isAppBarVisible;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.transparent,
-        extendBody: true,
-        appBar: _isAppBarVisible
-            ? AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: Text(widget.title),
-        )
-            : null,
-        body: GestureDetector(
-          onTap: _toggleAppBarVisibility,
-          child: Container(
-            width: double.infinity,
-            height: double.infinity,
-            color: Colors.white,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text(
-                  _randomPhrase,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 18),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Frases Descobertas: ${_percentageDiscovered.toStringAsFixed(1)}%',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                if (_percentageDiscovered < 100)
+        backgroundColor: Colors.white,
+        body: OrientationBuilder(
+          builder: (context, orientation) {
+            bool isPortrait = orientation == Orientation.portrait;
+
+            // Definindo diferentes tamanhos para cada orientação
+            double textSize = isPortrait ? 22 : 28; // Tamanho da frase
+            double progressSize = isPortrait ? 60 : 50; // Tamanho da barra de progresso
+            double buttonWidth = isPortrait ? 200 : 180; // Largura do botão
+            double buttonHeight = isPortrait ? 50 : 40; // Altura do botão
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  // Frase no centro
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        _randomPhrase,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: textSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Indicador de progresso (CÍRCULO)
                   Column(
                     children: [
-                      const SizedBox(height: 10),
-                      Text(
-                        'Próximo Sorteio em: $_countdown',
-                        style: const TextStyle(fontSize: 16),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: progressSize, // Tamanho ajustado
+                            height: progressSize, // Tamanho ajustado
+                            child: CircularProgressIndicator(
+                              value: _percentageDiscovered / 100,
+                              strokeWidth: 8,
+                              backgroundColor: Colors.grey[300],
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+                            ),
+                          ),
+                          Text(
+                            '${_percentageDiscovered.toStringAsFixed(0)}%',
+                            style: TextStyle(
+                              fontSize: isPortrait ? 16 : 15, // Tamanho do texto da porcentagem
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
+                      const SizedBox(height: 10),
+                      if (_percentageDiscovered < 100)
+                        Text(
+                          'Próximo em: $_countdown',
+                          style: const TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
                     ],
                   ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    _showDiscoveredPhrasesDialog(context);
-                  },
-                  child: const Text('Ver Frases Descobertas'),
-                ),
-              ],
-            ),
-          ),
+
+                  const SizedBox(height: 20),
+
+                  // Botão na parte inferior
+                  SizedBox(
+                    width: buttonWidth, // Largura do botão ajustada
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        backgroundColor: Colors.deepPurple,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: () {
+                        _showDiscoveredPhrasesDialog(context);
+                      },
+                      child: const Text(
+                        'Frases Descobertas',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 35),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
