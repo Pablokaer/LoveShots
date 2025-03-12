@@ -38,7 +38,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   List<String> _phrases = [];
   Timer? _timer;
   Timer? _countdownTimer;
-  final int _intervalSeconds = 2;
+  final int _intervalSeconds = 5;
   double _percentageDiscovered = 0.0;
   List<String> _discoveredPhrases = [];
   int _countdown = 0;
@@ -118,6 +118,8 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     });
   }
 
+
+
   void _showDiscoveredPhrasesDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -153,7 +155,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xFFf12174),
         body: OrientationBuilder(
           builder: (context, orientation) {
             bool isPortrait = orientation == Orientation.portrait;
@@ -164,11 +166,27 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
             double buttonWidth = isPortrait ? 200 : 180; // Largura do botão
             double buttonHeight = isPortrait ? 50 : 40; // Altura do botão
 
+
+
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
+                  // Texto posicionado perto da borda superior
+                  Align(
+                    alignment: Alignment.topCenter, // Alinha o texto no topo
+                child: Transform.translate(
+                  offset: const Offset(0, 4), // Desce o texto 4 pixels
+                    child: Text(
+                      'Love Shots', // Aqui é o texto desejado
+                      style: TextStyle(
+                        fontFamily: 'LoveFont', // Nome da fonte definida no pubspec.yaml
+                        fontSize: 40,
+                        color: Colors.white,
+                      ),),
+                    ),
+                  ),
                   // Frase no centro
                   Expanded(
                     child: Center(
@@ -178,6 +196,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         style: TextStyle(
                           fontSize: textSize,
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -196,7 +215,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                               value: _percentageDiscovered / 100,
                               strokeWidth: 8,
                               backgroundColor: Colors.grey[300],
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.deepPurple),
+                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF0066)),
                             ),
                           ),
                           Text(
@@ -204,6 +223,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                             style: TextStyle(
                               fontSize: isPortrait ? 16 : 15, // Tamanho do texto da porcentagem
                               fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
                         ],
@@ -211,9 +231,11 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                       const SizedBox(height: 10),
                       if (_percentageDiscovered < 100)
                         Text(
-                          'Próximo em: $_countdown',
-                          style: const TextStyle(fontSize: 14, color: Colors.grey),
+                          'Next in: $_countdown''s',
+                          style: const TextStyle(fontSize: 14, color: Colors.white),
+
                         ),
+
                     ],
                   ),
 
@@ -225,7 +247,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 15),
-                        backgroundColor: Colors.deepPurple,
+                        backgroundColor: Color(0xFFFF0066),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
@@ -235,7 +257,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                         _showDiscoveredPhrasesDialog(context);
                       },
                       child: const Text(
-                        'Frases Descobertas',
+                        'Discovered Phrases',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
